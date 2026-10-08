@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>健康小助手</title>
+  <style>
+    :root { --blue:#3978ed; --ink:#17233a; --muted:#78839a; --line:#e7eaf1; --page:#f7f8ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; background:linear-gradient(145deg,#fff4f7 0%,#f6f5ff 43%,#f5f8ff 100%); }
+    button,input { font:inherit; } button { cursor:pointer; border:0; }
+    .app { height:100dvh; max-width:680px; margin:auto; display:flex; flex-direction:column; overflow:hidden; background:linear-gradient(160deg,rgba(255,242,247,.9),rgba(246,248,255,.96) 45%,#eef4ff); }
+    .topbar { height:78px; padding:18px 20px 12px; display:flex; align-items:center; gap:14px; background:rgba(255,255,255,.6); backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,.8); }
+    .back,.round-icon,.action { background:transparent; color:var(--ink); display:grid; place-items:center; padding:0; }
+    .back { width:34px; height:34px; margin-left:-6px; } .back svg { width:25px; }
+    .heading { flex:1; } .heading strong { font-size:19px; display:block; letter-spacing:.2px; } .heading small { display:block; color:#99a1b0; font-size:12px; margin-top:3px; }
+    .round-icon { width:38px; height:38px; border-radius:50%; background:#fff; box-shadow:0 3px 12px rgba(91,110,151,.1); color:#4e5e7b; }
+    svg { width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+    .chat { flex:1; overflow-y:auto; padding:22px 18px 12px; scroll-behavior:smooth; }
+    .date { font-size:12px; color:#9ba4b5; text-align:center; margin:1px 0 18px; }
+    .welcome { color:#53637e; font-size:14px; margin:0 0 16px 7px; }
+    .message { display:flex; margin:14px 0; } .message.user { justify-content:flex-end; }
+    .bubble-user { color:#24465f; background:linear-gradient(135deg,#ffdce8,#ffd3e1); padding:12px 16px; border-radius:18px 18px 5px 18px; box-shadow:0 7px 18px rgba(228,133,161,.14); font-size:15px; }
+    .answer { width:min(100%,590px); background:rgba(255,255,255,.98); border-radius:18px 18px 18px 5px; padding:19px 18px 0; box-shadow:0 8px 26px rgba(68,85,125,.10); border:1px solid rgba(255,255,255,.75); }
+    .answer p { font-size:14px; line-height:1.72; margin:0 0 14px; color:#314059; } .answer h3 { margin:17px 0 11px; font-size:16px; letter-spacing:.1px; }
+    .answer ul { padding:0; margin:0 0 14px; list-style:none; } .answer li { position:relative; padding-left:16px; font-size:14px; color:#35445c; line-height:1.75; margin:6px 0; } .answer li::before { content:""; position:absolute; left:2px; top:.72em; width:5px; height:5px; border-radius:50%; background:#4e78d9; }
+    .answer ol { padding-left:21px; margin:0 0 14px; } .answer ol li { padding-left:2px; } .answer ol li::before { display:none; } .no-go { font-weight:700; color:#b44250; }
+    .warning,.danger { border-radius:11px; padding:10px 11px; margin:13px 0; font-size:13px; line-height:1.55; } .warning { background:#fff8e9; color:#80601b; } .danger { background:#fff2f2; color:#a83642; } .warning b,.danger b { color:inherit; }
+    .table-wrap { overflow-x:auto; margin:12px 0 16px; border:1px solid var(--line); border-radius:12px; } table { border-collapse:collapse; width:520px; font-size:13px; background:#fff; } th { color:#25334e; background:#f3f6fb; font-weight:700; text-align:left; } td,th { padding:11px 13px; border-bottom:1px solid var(--line); white-space:nowrap; } tr:last-child td { border-bottom:0; }
+    .chips-title { font-size:14px; font-weight:700; margin:17px 0 10px; }.chips { display:flex; flex-wrap:wrap; gap:8px; }.choice { background:#f6f7fb; color:#45536c; border:1px solid #eceef5; border-radius:999px; padding:8px 13px; font-size:13px; transition:.18s; }.choice.selected { background:#e7f0ff; border-color:#83adff; color:#2866ce; }
+    .confirm { width:100%; margin:17px 0 16px; padding:12px; border-radius:999px; background:linear-gradient(90deg,#f7a9c4 0%,#bfa8ee 48%,#77b8f5 100%); color:white; font-weight:700; box-shadow:0 6px 14px rgba(150,135,219,.28); }
+    .card-actions { height:48px; border-top:1px solid #eff1f5; margin:0 -18px; padding:0 14px; display:flex; align-items:center; gap:7px; }.action { color:#75819a; width:31px; height:31px; border-radius:9px; }.action:hover { color:var(--blue); background:#f0f5ff; }.doctor { margin-left:auto; display:flex; align-items:center; gap:6px; color:#316cce; background:#eff5ff; border:1px solid #d8e7ff; border-radius:999px; padding:7px 10px; font-size:12px; font-weight:600; }.doctor span { width:19px; height:19px; border-radius:50%; background:linear-gradient(135deg,#85b5ef,#ffe1cd); display:grid; place-items:center; font-size:10px; }
+    .composer { padding:9px 14px 16px; background:linear-gradient(transparent,rgba(248,250,255,.98) 28%); }.shortcuts { display:flex; gap:8px; overflow-x:auto; padding:3px 2px 11px; scrollbar-width:none; }.shortcut { flex:0 0 auto; background:rgba(255,255,255,.94); border:1px solid #edf0f7; border-radius:999px; padding:9px 13px; color:#3b4b67; font-size:13px; white-space:nowrap; box-shadow:0 4px 12px rgba(103,121,159,.08); }.shortcut i { font-style:normal; margin-right:4px; }.input-row { height:53px; padding:0 10px 0 13px; border-radius:17px; background:#fff; display:flex; align-items:center; gap:9px; box-shadow:0 7px 21px rgba(76,92,129,.1); border:1px solid #f1f1f4; }.input-row input { min-width:0; flex:1; border:0; outline:0; color:#35425b; font-size:14px; }.input-row input::placeholder { color:#abb2c0; }.send { border-radius:11px; background:#3978ed; color:white; padding:8px 11px; font-size:12px; font-weight:600; display:none; }.input-row:focus-within .send { display:block; }.tool { color:#63718c; width:29px; height:30px; display:grid; place-items:center; background:transparent; padding:0; }.tool svg { width:22px; }
+    @media (min-width:700px) { body { padding:20px; } .app { height:calc(100dvh - 40px); border-radius:27px; box-shadow:0 20px 65px rgba(59,73,110,.19); } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar"><button class="back" aria-label="返回"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><div class="heading"><strong>健康小助手</strong><small>内容由 AI 生成</small></div><button class="round-icon" aria-label="历史记录"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5M12 7v5l3 2"/></svg></button></header>
+    <section class="chat" id="chat"><div class="date">今天 20:28</div><p class="welcome">你好，我是你的健康小助手</p><div class="message user"><div class="bubble-user">最近总是腹部隐痛，需要注意什么？</div></div>
+      <div class="message"><article class="answer"><p>腹痛原因较多，先按疼痛部位和伴随症状初步判断方向；多数是胃肠不适等常见问题，但出现危险信号时请及时就医。</p><h3>一、按疼痛部位看可能原因</h3><div class="table-wrap"><table><thead><tr><th>疼痛部位</th><th>常见原因</th><th>建议关注</th></tr></thead><tbody><tr><td>上腹部</td><td>胃炎、消化不良</td><td>与进食关系</td></tr><tr><td>右上腹</td><td>胆囊问题</td><td>是否发热</td></tr><tr><td>右下腹</td><td>阑尾炎等</td><td>疼痛是否加重</td></tr></tbody></table></div><h3>二、需要马上就医的情况</h3><div class="danger"><b>🔴 危险信号：</b>突发剧烈腹痛、持续加重、呕血/便血、意识模糊或冷汗。</div><div class="warning"><b>⚠️ 温馨提醒：</b>若腹痛超过 6 小时、反复发作，或孕期及慢病期间出现腹痛，请尽早线下就诊。</div><h3>三、帮我了解你的情况</h3><div class="chips-title">疼痛部位</div><div class="chips"><button class="choice">上腹</button><button class="choice">右上腹</button><button class="choice">肚脐周围</button><button class="choice">右下腹</button><button class="choice">不清楚</button></div><div class="chips-title">伴随症状（可多选）</div><div class="chips"><button class="choice">发热</button><button class="choice">呕吐</button><button class="choice">腹泻</button><button class="choice">没有</button></div><button class="confirm">确定</button><footer class="card-actions"><button class="action" title="语音播放">🔊</button><button class="action" title="复制">⧉</button><button class="action" title="转发">↗</button><button class="action" title="更多">•••</button><button class="doctor"><span>👨‍⚕️</span>问真人医生</button></footer></article></div>
+    </section>
+    <footer class="composer"><div class="shortcuts"><button class="shortcut"><i>👨‍⚕️</i>问真人医生</button><button class="shortcut"><i>📄</i>报告单解读</button><button class="shortcut"><i>🔮</i>每日健康运势</button></div><div class="input-row"><button class="tool" aria-label="语音输入"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M8 22h8"/></svg></button><input id="message" placeholder="发消息或按住说话..." aria-label="输入消息"/><button class="tool" aria-label="拍照"><svg viewBox="0 0 24 24"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3"/></svg></button><button class="tool" aria-label="相册"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1"/><path d="m21 15-5-5L5 20"/></svg></button><button class="send" id="send">发送</button></div></footer>
+  </main>
+  <script>
+    // 当前仅用于约束前端模拟数据的结构；不会发送到任何 API。
+    const SYSTEM_PROMPT = String.raw`你是「文心健康管家」，一个专业、结构化的健康科普助手。你不是医生，不能下确定性诊断，不能推荐具体药物剂量。
+
+【回答总原则】
+1. 结论前置：第一句话必须直接回答用户最关心的问题。
+2. 结构固定：必须使用“一、二、三、四”分区编号，每区内部用圆点或表格展开。
+3. 危险信号必须显性化：
+   - 🔴 红色圆点 = 危险信号，马上急诊
+   - ⚠️ 黄色三角 = 尽快就医
+   - ❌ 红色叉号 = 千万不要做
+4. 结尾必须反问：最后一句要引导用户补充关键变量，并列出可点选的选项按钮。
+5. 来源与背书：如果涉及具体知识，适当提示“参考权威医学资料”或“建议就医确认”。
+
+【字数限制】
+- 科普知识：600~900字，允许长，因为用户是来搞明白的。
+- 诊疗咨询：400~700字，先反问再展开，信息不完整时不要长篇。
+- 用药咨询：500~800字，包含剂量表格和禁忌人群。
+- 健康管理：500~800字，包含现成搭配和避坑清单。
+- 就医服务：300~500字，直接给科室和红线，不要长篇科普。
+- 其他/无法判断：200~400字，先猜一个可能方向，再引导补充信息。
+
+【不同意图的结构模板】
+▍科普知识
+一、[核心定义/全局判断]
+二、按[维度]分点看
+三、哪些情况要警惕
+四、怎么确认/怎么处理
+结尾反问 + 选项按钮
+
+▍诊疗咨询
+第一句：结论前置 + 就医警示
+一、按[维度]看可能原因
+二、[另一个维度]也能提示病因
+三、现在可以怎么处理
+四、出现这些情况马上去急诊（🔴）
+结尾反问 + 选项按钮
+
+▍用药咨询
+第一句：可以吃/不可以吃 + 一句安全提醒
+一、为什么[药名]能/不能用于[症状]
+二、怎么吃才安全（表格：剂型、剂量、服用要点）
+三、这些人不能吃或要慎用（禁用/慎用）
+四、出现这些情况要停药就医（🔴）
+结尾反问 + 选项按钮
+
+▍健康管理
+第一句：结论前置 + 核心原则
+一、[核心搭配公式]
+二、具体搭配/做法（表格）
+三、这些要避开（❌）
+四、特殊情况提醒（⚠️/🔴）
+结尾反问 + 选项按钮
+
+▍就医服务
+第一句：首选挂[科室]
+一、为什么首选[科室]
+二、这些情况可以换科室（表格）
+三、就诊前可以先自查
+四、出现这些情况别排队，直接急诊（🔴）
+结尾反问 + 选项按钮
+
+▍其他/无法判断
+第一句：先按最可能的方向温柔地猜一下
+然后：按科普或诊疗的标准结构展开
+结尾反问 + 选项按钮
+
+【禁止事项】
+- 不能写“建议做XX检查”这种确定性诊断。
+- 不能推荐具体药物剂量（只能用表格列“常用范围”，并提示遵医嘱）。
+- 不能省略危险信号和结尾反问。
+- 不能出现“更自然”“更专业”这种不可判定的词。`;
+    // 追加前端可解析的输出约定：这不会改变医学内容，只约束排版。
+    const RENDER_FORMAT = `\n\n【前端排版格式】\n- 一级分区必须独占一行，使用“一、”“二、”“三、”“四、”开头。\n- 分点每行用“- ”开头；表格使用 Markdown 管道表格。\n- 危险块用“🔴 危险信号”独占一行，尽快就医块用“⚠️ 尽快就医”独占一行。\n- 结尾追问后，另起一行写“选项：”，下一行用【选项A】【选项B】【选项C】列出 3-5 个可点选答案。不要输出 HTML。`;
+
+    // 前端只访问本地后端代理；API Key 仅保存在 .env，不会发送到浏览器。
+    const HEALTH_BOT_API_CONFIG = {
+      endpoint: '/api/health-bot'
+    };
+
+    /**
+     * 通过本地后端代理调用模型，并返回模型生成的纯文本。
+     */
+    async function callHealthBot(userInput) {
+      const response = await fetch(HEALTH_BOT_API_CONFIG.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemPrompt: SYSTEM_PROMPT + RENDER_FORMAT, userInput })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || `Health Bot API 请求失败：${response.status}`);
+      }
+      const text = data?.text;
+      if (typeof text !== 'string' || !text.trim()) {
+        throw new Error('Health Bot API 未返回有效文本。');
+      }
+      return text.trim();
+    }
+    const input=document.querySelector('#message'), chat=document.querySelector('#chat');
+    // 首次打开只保留欢迎语；示例问答不再显示在真实产品的初始界面中。
+    chat.innerHTML='<div class="date">今天</div><p class="welcome">您好，我是你的健康小助手</p>';
+    const actions = `<footer class="card-actions"><button class="action" title="语音播放">🔊</button><button class="action" title="复制">⧉</button><button class="action" title="转发">↗</button><button class="action" title="更多">•••</button><button class="doctor"><span>👨‍⚕️</span>问真人医生</button></footer>`;
+    const choices = `<div class="chips-title">疼痛部位</div><div class="chips"><button class="choice">上腹</button><button class="choice">右上腹</button><button class="choice">肚脐周围</button><button class="choice">右下腹</button><button class="choice">不清楚</button></div><div class="chips-title">疼痛性质</div><div class="chips"><button class="choice">阵发性绞痛</button><button class="choice">持续性钝痛</button><button class="choice">刀割样剧痛</button></div><div class="chips-title">伴随症状（可多选）</div><div class="chips"><button class="choice">发热</button><button class="choice">呕吐</button><button class="choice">腹泻</button><button class="choice">血便/黑便</button><button class="choice">没有</button></div><button class="confirm">确定</button>`;
+    function abdomenAnswer(){return `<article class="answer"><p><b>腹痛最常见于胃肠炎、消化不良等胃肠问题。</b>但突发剧痛、伴发热、呕血/便血或意识不清时，请立即急诊。</p><h3>一、按疼痛部位看最可能是什么</h3><div class="table-wrap"><table><thead><tr><th>疼痛部位</th><th>常见方向</th><th>可留意的情况</th></tr></thead><tbody><tr><td>上腹部</td><td>胃炎、消化不良</td><td>是否与进食相关</td></tr><tr><td>右上腹</td><td>胆囊问题</td><td>是否发热或油腻饮食后加重</td></tr><tr><td>肚脐周围/全腹</td><td>肠炎、肠痉挛</td><td>是否腹泻、腹胀</td></tr><tr><td>右下腹</td><td>阑尾炎等</td><td>疼痛是否持续加重</td></tr></tbody></table></div><h3>二、疼痛性质也能提示病因</h3><ul><li><b>阵发性绞痛：</b>可能与结石、肠痉挛等空腔脏器痉挛有关。</li><li><b>持续性钝痛：</b>可能与炎症有关，例如胃肠道炎症。</li><li><b>刀割样剧痛：</b>⚠️ 需警惕急腹症，应尽快评估。</li></ul><h3>三、伴随症状帮你锁定方向</h3><ul><li><b>发热：</b>可能提示感染或炎症。</li><li><b>呕吐/腹泻：</b>常见于胃肠炎、食物不耐受等。</li><li><b>血便/黑便：</b>可能提示消化道出血，应及时就医。</li><li><b>黄疸：</b>可能与胆道或肝脏问题有关。</li></ul><h3>四、现在可以怎么处理</h3><ol><li><b>暂时清淡饮食：</b>观察疼痛是否与进食有关，避免油腻和酒精。</li><li><b>记录症状：</b>记下部位、持续时间、诱因和伴随症状。</li><li><span class="no-go">❌ 不要自行滥用止痛药：</span>可能掩盖病情，影响后续判断。</li><li><b>及时沟通：</b>若疼痛加重或反复，请线下就医评估。</li></ol><div class="danger"><b>🔴 危险信号（任一出现马上去急诊）：</b><ul><li>突发剧烈腹痛，且持续加重</li><li>呕血、便血或黑便</li><li>伴意识模糊、晕厥、冷汗</li><li>腹部僵硬如板、明显拒按</li><li>高热不退或外伤后腹痛</li></ul></div><div class="warning"><b>⚠️ 尽快就医的情况：</b><ul><li>腹痛持续超过 6 小时或反复发作</li><li>孕期、老年人或慢病患者出现腹痛</li><li>伴明显体重下降或食欲持续变差</li></ul></div><h3>六、就诊时医生会怎么查</h3><p>医生通常会结合病史、腹部查体，以及血液、尿液、超声或影像等结果综合判断。检查项目会因疼痛部位和伴随症状而不同。</p><ul><li><b>上腹痛、反酸：</b>消化内科</li><li><b>右下腹痛、发热：</b>普外科 → 急诊</li><li><b>下腹痛伴月经异常：</b>妇科</li><li><b>急剧加重或伴危险信号：</b>急诊科</li></ul><p><b>如果想更精准地判断方向，可以说说疼痛具体在哪个位置、是绞痛还是隐痛、有没有发热或拉肚子？</b></p>${choices}${actions}</article>`}
+    function pyloriAnswer(){return `<article class="answer"><p><b>幽门螺杆菌感染很常见，很多人没有明显症状；它与慢性胃炎、消化性溃疡风险相关，但是否感染及是否需要处理应由医生结合情况确认。</b>如出现呕血、黑便、持续剧烈腹痛或明显消瘦，请立即就医。</p><h3>一、幽门螺杆菌是什么</h3><p>它是一种可在胃内定植的细菌，主要通过口口、粪口途径传播。感染不等于一定有胃病，但长期持续感染可能增加胃部炎症的风险。</p><h3>二、按症状表现看可能的关联</h3><div class="table-wrap"><table><thead><tr><th>常见表现</th><th>可能方向</th><th>说明</th></tr></thead><tbody><tr><td>反酸、嗳气</td><td>上消化道不适</td><td>也可能与饮食、作息有关</td></tr><tr><td>上腹隐痛、饱胀</td><td>胃黏膜炎症相关</td><td>不能仅凭症状判断</td></tr><tr><td>没有症状</td><td>无症状携带</td><td>仍需结合个人情况评估</td></tr></tbody></table></div><h3>三、哪些情况要特别警惕</h3><ul><li><b>反复上腹痛：</b>可能提示胃部炎症或溃疡相关问题，需要线下评估。</li><li><b>家族中有胃癌史：</b>属于需要更重视的背景因素，应主动告知医生。</li><li><b>长期使用某些止痛药：</b>可能增加胃黏膜损伤风险，需避免自行处理。</li></ul><h3>四、怎么确认和处理</h3><ol><li><b>先梳理信息：</b>记录不适与进食、作息、压力的关系。</li><li><b>就医确认：</b>可与消化内科医生沟通，由其结合病史决定合适的评估方式。</li><li><span class="no-go">❌ 不要自行购买抗生素组合：</span>不规范使用可能增加耐药和不良反应风险。</li><li><b>关注同住家人：</b>若多人反复出现胃部不适，可在就诊时一并说明。</li></ol><div class="danger"><b>🔴 危险信号（任一出现马上去急诊）：</b><ul><li>呕血、咖啡色呕吐物</li><li>黑便或便血，并伴头晕乏力</li><li>突发持续加重的剧烈腹痛</li><li>晕厥、意识不清或明显心慌冷汗</li></ul></div><div class="warning"><b>⚠️ 尽快就医的情况：</b><ul><li>体重在短期内明显下降、食欲持续变差</li><li>吞咽困难或反复呕吐</li><li>上腹不适反复发作且影响生活</li></ul></div><p>以上为健康科普信息，具体情况可参考权威医学资料，并由医生结合个人病史确认。</p><p><b>如果想更精准地判断方向，可以说说是否有上腹痛或反酸、症状持续多久、家里是否有人有胃部疾病史？</b></p><div class="chips-title">补充信息</div><div class="chips"><button class="choice">上腹痛/饱胀</button><button class="choice">反酸/嗳气</button><button class="choice">症状持续时间</button><button class="choice">胃病家族史</button></div><button class="confirm">确定</button>${actions}</article>`}
+    function placeholderAnswer(question){return `<article class="answer"><p><b>正在按模板生成……</b>“${question}”最常见的原因正在整理；如出现突发剧痛、呼吸困难、意识异常等危险信号，请立即就医。</p><h3>一、按症状特点看最可能是什么</h3><div class="table-wrap"><table><thead><tr><th>观察维度</th><th>可能方向</th></tr></thead><tbody><tr><td>发生部位/时间</td><td>占位：待补充</td></tr><tr><td>严重程度</td><td>占位：待补充</td></tr></tbody></table></div><h3>二、持续时间也能提示病因</h3><ul><li><b>短暂出现：</b>占位：可能与短期刺激有关。</li><li><b>持续或加重：</b>占位：需要进一步了解。</li></ul><h3>三、伴随症状帮你锁定方向</h3><ul><li><b>伴随表现：</b>占位：请补充相关症状。</li></ul><h3>四、现在可以怎么处理</h3><ol><li>记录症状出现的时间、频率和诱因。</li><li><span class="no-go">❌ 不要自行确诊：</span>症状相似时需要综合判断。</li></ol><div class="danger"><b>🔴 危险信号（任一出现马上去急诊）：</b><ul><li>症状突然严重加重</li><li>意识异常或呼吸困难</li><li>持续出血或晕厥</li><li>高热不退</li></ul></div><div class="warning"><b>⚠️ 尽快就医的情况：</b><ul><li>症状反复或持续不缓解</li><li>影响日常生活或睡眠</li></ul></div><h3>六、就诊时医生会怎么查</h3><p>医生会结合病史、体格检查和必要的常规检查进行综合评估。</p><ul><li><b>症状持续：</b>相关专科 → 门诊</li><li><b>症状急剧加重：</b>急诊科</li></ul><p><b>如果想更精准地判断方向，可以说说症状出现多久、具体部位或表现、有没有伴随不适？</b></p><div class="chips-title">补充信息</div><div class="chips"><button class="choice">发生部位</button><button class="choice">持续时间</button><button class="choice">伴随症状</button></div><button class="confirm">确定</button>${actions}</article>`}
+    function bindCard(card){card.querySelectorAll('.choice').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('selected'))); const confirm=card.querySelector('.confirm'); if(confirm)confirm.addEventListener('click',e=>{e.currentTarget.textContent='已记录，正在为你分析';e.currentTarget.style.opacity='.78'});}
+    document.querySelectorAll('.answer').forEach(bindCard);
+    document.querySelectorAll('.shortcut').forEach(b=>b.addEventListener('click',()=>{ input.value=b.textContent.trim().replace(/^[^\u4e00-\u9fa5]+/,''); input.focus(); }));
+    // 模拟路由仍保留在源码中，便于后续断网演示；发送流程不再使用它。
+    function simulateResponse(question){if(question.includes('幽门螺杆菌')||question.includes('幽门菌'))return pyloriAnswer();if(question.includes('腹痛'))return abdomenAnswer();return placeholderAnswer(question);}
+    function makeList(items){const list=document.createElement('ul');items.forEach(item=>{const li=document.createElement('li');li.textContent=item.replace(/^[-•]\s*/,'');list.append(li);});return list;}
+    function makeTable(rows){const wrap=document.createElement('div');wrap.className='table-wrap';const table=document.createElement('table');const header=rows[0];const head=document.createElement('thead');const tr=document.createElement('tr');header.forEach(cell=>{const th=document.createElement('th');th.textContent=cell;tr.append(th)});head.append(tr);table.append(head);const body=document.createElement('tbody');rows.slice(1).forEach(row=>{const rowEl=document.createElement('tr');row.forEach(cell=>{const td=document.createElement('td');td.textContent=cell;rowEl.append(td)});body.append(rowEl)});table.append(body);wrap.append(table);return wrap;}
+    function parseTable(lines,start){const rows=[];let index=start;while(index<lines.length&&/^\|.*\|\s*$/.test(lines[index].trim())){const cells=lines[index].trim().slice(1,-1).split('|').map(x=>x.trim());if(!cells.every(x=>/^:?-{3,}:?$/.test(x)))rows.push(cells);index++;}return {rows,index};}
+    function structuredAnswer(text, context){const article=document.createElement('article');article.className='answer';const lines=text.replace(/\r/g,'').split('\n');let pending=[];let alertBox=null;let optionNames=[];const flush=()=>{if(!pending.length)return;(alertBox||article).append(makeList(pending));pending=[];};for(let i=0;i<lines.length;i++){const line=lines[i].trim();if(!line) {flush();continue;}if(/^\|.*\|\s*$/.test(line)){flush();const parsed=parseTable(lines,i);if(parsed.rows.length>1)article.append(makeTable(parsed.rows));else article.append(Object.assign(document.createElement('p'),{textContent:line}));i=parsed.index-1;continue;}const options=[...line.matchAll(/[【\[]([^】\]]+)[】\]]/g)].map(m=>m[1].trim()).filter(Boolean);if(options.length){optionNames.push(...options);const without=line.replace(/[【\[][^】\]]+[】\]]/g,'').replace(/选项[：:]?/,'').trim();if(without)article.append(Object.assign(document.createElement('p'),{textContent:without}));continue;}if(/^[-•]\s+/.test(line)){pending.push(line);continue;}flush();if(/^🔴/.test(line)||/^⚠️/.test(line)){alertBox=document.createElement('div');alertBox.className=line.startsWith('🔴')?'danger':'warning';const strong=document.createElement('b');strong.textContent=line;alertBox.append(strong);article.append(alertBox);continue;}alertBox=null;if(/^[一二三四五六七八九十]+、/.test(line)){const heading=document.createElement('h3');heading.textContent=line;article.append(heading);continue;}const paragraph=document.createElement('p');paragraph.textContent=line;article.append(paragraph);}flush();if(optionNames.length){const unique=[...new Set(optionNames)].slice(0,6);const title=document.createElement('div');title.className='chips-title';title.textContent='请选择补充信息';article.append(title);const chips=document.createElement('div');chips.className='chips';unique.forEach(name=>{const button=document.createElement('button');button.className='choice';button.type='button';button.textContent=name;button.dataset.followup=`${context}\n补充信息：${name}`;chips.append(button)});article.append(chips);}article.insertAdjacentHTML('beforeend',actions);return article;}
+    function bindCard(card){card.querySelectorAll('.choice').forEach(button=>button.addEventListener('click',()=>{if(button.dataset.followup)sendQuestion(button.dataset.followup,button.textContent);else button.classList.toggle('selected')}));const confirm=card.querySelector('.confirm');if(confirm)confirm.addEventListener('click',e=>{e.currentTarget.textContent='已记录，正在为你分析';e.currentTarget.style.opacity='.78'});}
+    async function sendQuestion(question, displayText=question){if(!question.trim())return;const user=document.createElement('div');user.className='message user';user.innerHTML='<div class="bubble-user"></div>';user.querySelector('div').textContent=displayText;chat.append(user);const reply=document.createElement('div');reply.className='message';reply.innerHTML='<article class="answer"><p>正在输入……</p></article>';chat.append(reply);chat.scrollTop=chat.scrollHeight;try{const text=await callHealthBot(question);reply.replaceChildren(structuredAnswer(text,question));bindCard(reply);}catch(error){reply.innerHTML='<article class="answer"><p>暂时无法回答，请稍后再试</p></article>';console.error('Health Bot request failed:',error);}chat.scrollTop=chat.scrollHeight;}
+    async function send(){const question=input.value.trim();if(!question)return;input.value='';await sendQuestion(question);}
+    document.querySelector('#send').addEventListener('click',send);input.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+  </script>
+</body>
+</html>
